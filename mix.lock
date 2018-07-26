@@ -1,0 +1,7 @@
+%{
+  "gen_fst": {:hex, :gen_fst, "0.4.1", "f4d96f226aad2092d93cf37790b9d028ea5e20326a78444fda9aba1e6b7b426b", [:mix], [{:gen_state_machine, "~> 2.0", [hex: :gen_state_machine, repo: "hexpm", optional: false]}, {:libgraph, "~> 0.9", [hex: :libgraph, repo: "hexpm", optional: false]}], "hexpm"},
+  "gen_state_machine": {:hex, :gen_state_machine, "2.0.2", "52abcba0981a058940c2a9b33b704e126d808418a6e85d45fa466d7450a90381", [:mix], [], "hexpm"},
+  "inflex": {:hex, :inflex, "1.10.0", "8366a7696e70e1813aca102e61274addf85d99f4a072b2f9c7984054ea1b9d29", [:mix], [], "hexpm"},
+  "lemma": {:hex, :lemma, "0.1.1", "1f61760a05629dd4f1054fca17b51f57aca998184b0af561c2a6b0f57bd1bae4", [:mix], [{:gen_fst, "~> 0.4.1", [hex: :gen_fst, repo: "hexpm", optional: false]}], "hexpm"},
+  "libgraph": {:hex, :libgraph, "0.12.0", "e837d552ab739cc42042ae67a9a5433ed6c383becec705a4010114e1b73c9a36", [:mix], [], "hexpm"},
+}
