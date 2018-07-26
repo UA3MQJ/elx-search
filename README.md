@@ -1,11 +1,8 @@
 # Search
 
-**TODO: Add description**
+Функции для поиска слов в наименованиях
 
 ## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `search` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -15,7 +12,13 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/search](https://hexdocs.pm/search).
+## Usage
 
+```elixir
+Search.PorterStemmerRu.stem("августа")
+"август"
+Search.PorterStemmerRu.stem("августе")
+"август"
+Search.PorterStemmer.stem("mans")
+"man"
+```
