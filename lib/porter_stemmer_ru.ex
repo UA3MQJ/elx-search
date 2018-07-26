@@ -30,7 +30,7 @@ defmodule Search.PorterStemmerRu do
     {t1, {next_word1, _}} = perfective_gerund(word)
     # Иначе, удаляем окончание REFLEXIVE (если оно существует).
     {_t2, {next_word2, _}} = reflexive(next_word1)
-    # Затем в следующем порядке пробуем удалить окончания: ADJECTIVAL, VERB, NOUN.
+    # # Затем в следующем порядке пробуем удалить окончания: ADJECTIVAL, VERB, NOUN.
     {t3, {next_word3, _}} = adjectiveval(next_word2)
     {t4, {next_word4, _}} = verb(next_word3)
     {t5, {next_word5, _}} = noun(next_word4)
@@ -321,7 +321,6 @@ defmodule Search.PorterStemmerRu do
   def adjectiveval(word) do
     {t1, {next_word1, tail1}} = adjective(word)
     {t2, {next_word2, tail2}} = participle(next_word1)
-
     {t1 or t2, {next_word2, tail1<>tail2}} 
   end
 
@@ -338,6 +337,14 @@ defmodule Search.PorterStemmerRu do
   def vovels() do
     ["а", "е", "и", "о", "у", "ы", "э", "ю", "я"]
   end
+  # количество гласных в слове
+  def vovels_count(word) do
+    word
+    |> String.codepoints()
+    |> Enum.map(fn(letter) -> letter in vovels() end)
+    |> Enum.filter(fn(is_vov) -> is_vov end)
+    |> length()
+  end
 
   # RV — область слова после первой гласной. Она может быть пустой, если гласные в слове отсутствуют.
   def rv(word) do
@@ -346,7 +353,7 @@ defmodule Search.PorterStemmerRu do
     |>Enum.min()
     case first do
       false -> ""
-      num -> String.slice(word, num..-1)
+      num -> String.slice(word, (num+1)..-1)
     end
   end
 
