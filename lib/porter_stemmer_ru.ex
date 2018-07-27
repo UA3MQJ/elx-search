@@ -66,7 +66,10 @@ defmodule Search.PorterStemmerRu do
   def step_4(word) do
     {t, {next_word, _}} = superlative(word)
     cond do
+      # TODO проверить
       # Если слово оканчивается на нн — удаляем последнюю букву.
+      # Если слово оканчивается на SUPERLATIVE  —  удаляем его и снова удаляем последнюю букву, если слово оканчивается на нн.
+      # Если слово оканчивается на ь — удаляем его.
       t == true -> next_word
       "нн" == String.slice(word, -2..-1) -> String.slice(word, 0..-2)
       "ь" == String.slice(word, -1..-1) -> String.slice(word, 0..-2)
@@ -76,65 +79,32 @@ defmodule Search.PorterStemmerRu do
 
 
   # PERFECTIVE GERUND
+  # Группа 1: в, вши, вшись.
+  # Группа 2: ив, ивши, ившись, ыв, ывши, ывшись.
+  # Окончаниям из группы 1 должна предшествовать буква а или я.
   def perfective_gerund(word) do
-    rv_word = rv(word)
-    cond do
-      # Группа 2: ив, ивши, ившись, ыв, ывши, ывшись.
-      "ившись" == String.slice(rv_word, -6..-1) -> {true, {String.slice(word, 0..-7), String.slice(word, -6..-1)}}
-      "ывшись" == String.slice(rv_word, -6..-1) -> {true, {String.slice(word, 0..-7), String.slice(word, -6..-1)}}
-      "ивши"   == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-5), String.slice(word, -4..-1)}}
-      "ывши"   == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-5), String.slice(word, -4..-1)}}
-      "ив"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ыв"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      # Группа 1: в, вши, вшись.
-      # Окончаниям из группы 1 должна предшествовать буква а или я.
-      "авшись" == String.slice(rv_word, -6..-1) -> {true, {String.slice(word, 0..-6), String.slice(word, -5..-1)}}
-      "явшись" == String.slice(rv_word, -6..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -5..-1)}}
-      "авши"   == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "явши"   == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ав"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "яв"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      true -> {false, {word, ""}}
-    end
+    # {["а", "я"], "в"}, {["а", "я"], "вши"}, {["а", "я"], "вшись"},
+    li_grp1 = ["в", "вши", "вшись"] |> Enum.map(&({["а", "я"], &1}))
+    li_grp2 = ["ив", "ивши", "ившись", "ыв", "ывши", "ывшись"]
+    li = li_grp1 ++ li_grp2
+    word_ends(rv(word), word, li)
   end
 
   # PARTICIPLE
   # Группа 1: ем, нн, вш, ющ, щ.
   # Группа 2: ивш, ывш, ующ.
   # Окончаниям из группы 1 должна предшествовать буква а или я.
-
   def participle(word) do
-    rv_word = rv(word)
-    cond do
-      # Группа 2:
-      "ивш"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ывш"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ующ"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      # Группа 1: в, вши, вшись.
-      # Окончаниям из группы 1 должна предшествовать буква а или я.
-      "аем"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яем"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "анн"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "янн"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "авш"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "явш"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ающ"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яющ"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ащ"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ящ"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      true -> {false, {word, ""}}
-    end
+    li_grp1 = ["ем", "нн", "вш", "ющ", "щ"] |> Enum.map(&({["а", "я"], &1}))
+    li_grp2 = ["ивш", "ывш", "ующ"]
+    li = li_grp1 ++ li_grp2
+    word_ends(rv(word), word, li)
   end
 
 
   # REFLEXIVE окончания ся, сь.
   def reflexive(word) do
-    rv_word = rv(word)
-    cond do
-      "ся"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "сь"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      true -> {false, {word, ""}}
-    end
+    word_ends(rv(word), word, ["ся", "сь"])
   end
 
   # VERB
@@ -142,177 +112,43 @@ defmodule Search.PorterStemmerRu do
   # Группа 2: ила, ыла, ена, ейте, уйте, ите, или, ыли, ей, уй, ил, ыл, им, ым, ен, ило, ыло, ено, ят, ует, уют, ит, ыт, ены, ить, ыть, ишь, ую, ю.
   # Окончаниям из группы 1 должна предшествовать буква а или я.
   def verb(word) do
-    rv_word = rv(word)
-    cond do
-      # Группа 2:
-      "ейте"    == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-5), String.slice(word, -4..-1)}}
-      "уйте"    == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-5), String.slice(word, -4..-1)}}     
-      "ила"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ыла"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ена"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ите"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "или"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ыли"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ило"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ыло"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ено"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ует"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "уют"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ены"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ить"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ыть"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ишь"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ей"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "уй"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ил"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ыл"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "им"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ым"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ен"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ят"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ит"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ыт"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ую"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ю"       == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      # Группа 1:
-      "аете"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "яете"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "айте"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "яйте"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "аешь"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "яешь"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "анно"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "янно"     == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ала"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яла"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ана"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яна"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "али"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яли"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "аем"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яем"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ало"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яло"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ано"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яно"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ает"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яет"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ают"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яют"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "аны"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яны"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ать"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ять"     == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ай"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "яй"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ал"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ял"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ан"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ян"      == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      true -> {false, {word, ""}}
-    end
+    li_grp1 = ["ла", "на", "ете", "йте", "ли", "й", "л", "ем", "н", "ло", "но", "ет", "ют", "ны", "ть", "ешь", "нно"]
+    |> Enum.map(&({["а", "я"], &1}))
+    li_grp2 = ["ила", "ыла", "ена", "ейте", "уйте", "ите", "или", "ыли", "ей", "уй", "ил", "ыл", "им", "ым", "ен",
+               "ило", "ыло", "ено", "ят", "ует", "уют", "ит", "ыт", "ены", "ить", "ыть", "ишь", "ую", "ю"]
+    li = li_grp1 ++ li_grp2
+    word_ends(rv(word), word, li)
+
   end
 
   # NOUN
   # а, ев, ов, ие, ье, е, иями, ями, ами, еи, ии, и, ией, ей, ой, ий, й, иям, ям, ием, ем, ам, ом, о, у, ах, иях, ях, ы, ь, ию, ью, ю, ия, ья, я.
   def noun(word) do
-    rv_word = rv(word)
-    cond do
-      "иями"   == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-5), String.slice(word, -4..-1)}}
-      "ями"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ами"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ией"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "иям"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ием"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "иях"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ям"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ев"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ов"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ие"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ье"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "еи"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ии"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ей"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ой"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ий"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ем"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ам"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ом"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ах"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ях"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ию"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ью"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ия"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ья"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "е"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "и"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "й"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "о"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "у"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ы"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ь"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "ю"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "а"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      "я"      == String.slice(rv_word, -1..-1) -> {true, {String.slice(word, 0..-2), String.slice(word, -1..-1)}}
-      true -> {false, {word, ""}}
-    end
+    li = ["а", "ев", "ов", "ие", "ье", "е", "иями", "ями", "ами", "еи", "ии", "и",
+          "ией", "ей", "ой", "ий", "й", "иям", "ям", "ием", "ем", "ам", "ом", "о",
+          "у", "ах", "иях", "ях", "ы", "ь", "ию", "ью", "ю", "ия", "ья", "я"]
+    word_ends(rv(word), word, li)
   end
 
   # SUPERLATIVE
   # ейш, ейше.
   def superlative(word) do
-    rv_word = rv(word)
-    cond do
-      "ейше"   == String.slice(rv_word, -4..-1) -> {true, {String.slice(word, 0..-5), String.slice(word, -4..-1)}}
-      "ейш"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      true -> {false, {word, ""}}
-    end
+    word_ends(rv(word), word, ["ейше", "ейш"])
   end
 
   # DERIVATIONAL
   # ост, ость.
   def derivational(word) do
-    r2_word = r2(word)
-    cond do
-      "ость"   == String.slice(r2_word, -4..-1) -> {true, {String.slice(word, 0..-5), String.slice(word, -4..-1)}}
-      "ост"    == String.slice(r2_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      true -> {false, {word, ""}}
-    end
+    word_ends(r2(word), word, ["ость", "ост"])
   end
 
   # ADJECTIVE
   # ее, ие, ые, ое, ими, ыми, ей, ий, ый, ой, ем, им, ым, ом, его, ого, ему, ому, их, ых, ую, юю, ая, яя, ою, ею.
   def adjective(word) do
-    rv_word = rv(word)
-    cond do
-      "ими"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ыми"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "его"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ого"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ему"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ому"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
-      "ее"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ие"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ые"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ое"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ей"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ий"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ый"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ой"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ем"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "им"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ым"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ом"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "их"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ых"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ую"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "юю"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ая"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "яя"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ою"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      "ею"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
-      true -> {false, {word, ""}}
-    end
+    li = ["ее", "ие", "ые", "ое", "ими", "ыми", "ей", "ий", "ый",
+          "ой", "ем", "им", "ым", "ом", "его", "ого", "ему", "ому",
+          "их", "ых", "ую", "юю", "ая", "яя", "ою", "ею"]
+    word_ends(rv(word), word, li)
   end
 
   # ADJECTIVAL
@@ -378,6 +214,54 @@ defmodule Search.PorterStemmerRu do
   end
 
   def r2(word), do: r1(r1(word))
+
+  # замена для
+  # rv_word = rv(word)
+  # cond do
+  #   "ся"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
+  #   "сь"     == String.slice(rv_word, -2..-1) -> {true, {String.slice(word, 0..-3), String.slice(word, -2..-1)}}
+  #   true -> {false, {word, ""}}
+  # end
+  #
+  # word_ends(rv(word), word, ["ся", "сь"])
+  #
+  def word_ends(rv_word, word, ends_list) do
+    word_ends_loop(rv_word, word, ends_list)
+  end
+  def word_ends_loop(_rv_word, word, []), do: {false, {word, ""}}
+  def word_ends_loop(rv_word, word, [ends | tail] = _ends_list) do
+    # "ими"    == String.slice(rv_word, -3..-1) -> {true, {String.slice(word, 0..-4), String.slice(word, -3..-1)}}
+    case ends do
+      # окончание, которому предшествуют другие буквы
+      {preends, ends2} ->
+        {t, {new_word, new_tail}} = word_ends_loop2(rv_word, word, ends2, preends)
+        case t do
+          true -> {t, {new_word, new_tail}}
+          false -> word_ends_loop(rv_word, word, tail)
+        end
+      # просто окончание
+      ends2 ->
+        elen = String.length(ends2) # длина окончания
+        word_end = String.slice(rv_word, -(elen)..-1) # окончание слова
+        case ends2==word_end do
+          true ->
+            {true, {String.slice(word, 0..-(elen+1)), String.slice(word, -(elen)..-1)}}
+          false ->
+            word_ends_loop(rv_word, word, tail)
+        end
+    end
+
+  end
+  def word_ends_loop2(_rv_word, word, _ends, []), do: {false, {word, ""}}
+  def word_ends_loop2(rv_word, word, ends, [pre_end | tail] = _pre_ends_list) do
+    {t, {new_word, new_tail}} = word_ends_loop(rv_word, word, [pre_end <> ends])
+    case t do
+      true ->
+        {t, {new_word <> String.slice(new_tail, 0..0), String.slice(new_tail, 1..-1)}}
+      false ->
+        word_ends_loop2(rv_word, word, ends, tail)
+    end
+  end
 
   # поиск первого вхождения символа. нумеруются с ноля
   def substr_pos(str, substr) do
